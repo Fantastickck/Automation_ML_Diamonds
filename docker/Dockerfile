@@ -2,8 +2,6 @@ FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DEFAULT_TIMEOUT=120 \
     PYTHONPATH=/app
 
 WORKDIR /app
@@ -13,9 +11,11 @@ RUN apt-get update && \
     update-ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/requirements.txt
-RUN python -m pip install --upgrade pip setuptools wheel && \
-    python -m pip install --retries 10 --timeout 120 --progress-bar off -r /app/requirements.txt
+COPY pyproject.toml uv.lock /app/
+RUN pip install --no-cache-dir uv==0.12.23 && \
+    uv sync --locked --no-dev --no-install-project
+
+ENV PATH="/app/.venv/bin:$PATH"
 
 COPY src /app/src
 COPY data /app/data

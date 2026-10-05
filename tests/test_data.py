@@ -13,7 +13,18 @@ def test_validate_data_requires_expected_columns():
 
 def test_validate_data_rejects_empty_dataset():
     data = pd.DataFrame(
-        columns=["carat", "cut", "color", "clarity", "depth", "table", "price", "x", "y", "z"]
+        columns=[
+            "carat",
+            "cut",
+            "color",
+            "clarity",
+            "depth",
+            "table",
+            "price",
+            "x",
+            "y",
+            "z",
+        ]
     )
 
     with pytest.raises(ValueError, match="Dataset is empty"):
