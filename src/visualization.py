@@ -8,8 +8,12 @@ import numpy as np
 import pandas as pd
 
 from src.data_processing import PROCESSED_DIR, PROJECT_ROOT, TARGET
-from src.model_training import FEATURE_COLUMNS, MODEL_PATH, load_processed_data, train_model
-
+from src.model_training import (
+    FEATURE_COLUMNS,
+    MODEL_PATH,
+    load_processed_data,
+    train_model,
+)
 
 FIGURES_DIR = PROJECT_ROOT / "reports" / "figures"
 
@@ -36,7 +40,9 @@ def plot_price_distribution(data: pd.DataFrame, output_path: Path) -> None:
     plt.close()
 
 
-def plot_predicted_vs_actual(test_df: pd.DataFrame, model: object, output_path: Path) -> None:
+def plot_predicted_vs_actual(
+    test_df: pd.DataFrame, model: object, output_path: Path
+) -> None:
     """Построить график сравнения фактической и предсказанной цены."""
     actual = test_df[TARGET].to_numpy()
     predicted = model.predict(test_df[FEATURE_COLUMNS])
@@ -44,8 +50,16 @@ def plot_predicted_vs_actual(test_df: pd.DataFrame, model: object, output_path: 
     max_value = float(max(actual.max(), predicted.max()))
 
     plt.figure(figsize=(6, 6))
-    plt.scatter(actual, predicted, alpha=0.75, color="#27ae60", edgecolor="white", linewidth=0.4)
-    plt.plot([min_value, max_value], [min_value, max_value], color="#eb5757", linestyle="--", label="Ideal prediction")
+    plt.scatter(
+        actual, predicted, alpha=0.75, color="#27ae60", edgecolor="white", linewidth=0.4
+    )
+    plt.plot(
+        [min_value, max_value],
+        [min_value, max_value],
+        color="#eb5757",
+        linestyle="--",
+        label="Ideal prediction",
+    )
     plt.title("Predicted vs Actual Price")
     plt.xlabel("Actual price")
     plt.ylabel("Predicted price")
@@ -64,7 +78,10 @@ def plot_feature_importance(model: object, output_path: Path, top_n: int = 12) -
     importances = regressor.feature_importances_
 
     order = np.argsort(importances)[-top_n:]
-    names = [feature_names[index].replace("numeric__", "").replace("categorical__", "") for index in order]
+    names = [
+        feature_names[index].replace("numeric__", "").replace("categorical__", "")
+        for index in order
+    ]
     values = importances[order]
 
     plt.figure(figsize=(9, 5))

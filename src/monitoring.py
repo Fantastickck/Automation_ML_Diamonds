@@ -22,7 +22,9 @@ def _numeric_profile(data: pd.DataFrame) -> dict[str, dict[str, float]]:
     return profile
 
 
-def save_baseline(data: pd.DataFrame, metrics: dict[str, float], path: Path | str) -> dict[str, Any]:
+def save_baseline(
+    data: pd.DataFrame, metrics: dict[str, float], path: Path | str
+) -> dict[str, Any]:
     """Сохранить model metrics и numeric feature profile как monitoring baseline."""
     baseline = {
         "metrics": metrics,

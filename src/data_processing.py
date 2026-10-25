@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 RAW_DATA_PATH = PROJECT_ROOT / "data" / "raw" / "diamonds.csv"
@@ -37,9 +36,21 @@ def generate_sample_data(rows: int = 500, random_state: int = 42) -> pd.DataFram
     color = rng.choice(color_values, rows)
     clarity = rng.choice(clarity_values, rows)
 
-    cut_score = pd.Series(cut).map({name: idx for idx, name in enumerate(cut_values, start=1)}).to_numpy()
-    color_score = pd.Series(color).map({name: idx for idx, name in enumerate(color_values, start=1)}).to_numpy()
-    clarity_score = pd.Series(clarity).map({name: idx for idx, name in enumerate(clarity_values, start=1)}).to_numpy()
+    cut_score = (
+        pd.Series(cut)
+        .map({name: idx for idx, name in enumerate(cut_values, start=1)})
+        .to_numpy()
+    )
+    color_score = (
+        pd.Series(color)
+        .map({name: idx for idx, name in enumerate(color_values, start=1)})
+        .to_numpy()
+    )
+    clarity_score = (
+        pd.Series(clarity)
+        .map({name: idx for idx, name in enumerate(clarity_values, start=1)})
+        .to_numpy()
+    )
     price = (
         500
         + carat * 4200
@@ -65,7 +76,9 @@ def generate_sample_data(rows: int = 500, random_state: int = 42) -> pd.DataFram
     )
 
 
-def load_raw_data(path: Path | str = RAW_DATA_PATH, create_if_missing: bool = True) -> pd.DataFrame:
+def load_raw_data(
+    path: Path | str = RAW_DATA_PATH, create_if_missing: bool = True
+) -> pd.DataFrame:
     """Загрузить raw diamonds data или создать детерминированный sample dataset."""
     path = Path(path)
     if path.exists():
@@ -79,7 +92,9 @@ def load_raw_data(path: Path | str = RAW_DATA_PATH, create_if_missing: bool = Tr
     return data
 
 
-def validate_data(data: pd.DataFrame, required_columns: Iterable[str] = REQUIRED_COLUMNS) -> None:
+def validate_data(
+    data: pd.DataFrame, required_columns: Iterable[str] = REQUIRED_COLUMNS
+) -> None:
     """Проверить обязательные колонки, непустые строки и числовые типы данных."""
     missing = set(required_columns) - set(data.columns)
     if missing:
@@ -125,14 +140,18 @@ def split_and_save(
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    train_df, test_df = train_test_split(data, test_size=test_size, random_state=random_state)
+    train_df, test_df = train_test_split(
+        data, test_size=test_size, random_state=random_state
+    )
     train_df.to_csv(output_dir / "train.csv", index=False)
     test_df.to_csv(output_dir / "test.csv", index=False)
     data.to_csv(output_dir / "diamonds_processed.csv", index=False)
     return train_df, test_df
 
 
-def run_data_pipeline(raw_path: Path | str = RAW_DATA_PATH, output_dir: Path | str = PROCESSED_DIR) -> tuple[pd.DataFrame, pd.DataFrame]:
+def run_data_pipeline(
+    raw_path: Path | str = RAW_DATA_PATH, output_dir: Path | str = PROCESSED_DIR
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     raw_data = load_raw_data(raw_path)
     validate_data(raw_data)
     cleaned = clean_data(raw_data)
@@ -142,7 +161,9 @@ def run_data_pipeline(raw_path: Path | str = RAW_DATA_PATH, output_dir: Path | s
 
 def main() -> None:
     train_df, test_df = run_data_pipeline()
-    print(f"Saved processed train/test data: train={len(train_df)}, test={len(test_df)}")
+    print(
+        f"Saved processed train/test data: train={len(train_df)}, test={len(test_df)}"
+    )
 
 
 if __name__ == "__main__":

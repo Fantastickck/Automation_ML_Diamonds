@@ -12,7 +12,6 @@ from src.data_processing import add_features
 from src.model_training import FEATURE_COLUMNS, METRICS_PATH, MODEL_PATH, load_model
 from src.monitoring import get_infrastructure_metrics
 
-
 app = FastAPI(title="Diamonds Price Prediction API", version="1.0.0")
 model: Any | None = load_model()
 
@@ -119,7 +118,9 @@ def health() -> HealthResponse:
 )
 def predict(features: DiamondFeatures) -> PredictionResponse:
     active_model = _get_model()
-    payload = features.model_dump() if hasattr(features, "model_dump") else features.dict()
+    payload = (
+        features.model_dump() if hasattr(features, "model_dump") else features.dict()
+    )
     frame = pd.DataFrame([payload])
     frame = add_features(frame)
     try:
@@ -146,5 +147,9 @@ def model_info() -> ModelInfoResponse:
         "model_exists": model_exists,
         "metrics": metrics,
         "features": FEATURE_COLUMNS,
-        "message": "Model artifact found." if model_exists else "Model artifact is missing. Run training before prediction.",
+        "message": (
+            "Model artifact found."
+            if model_exists
+            else "Model artifact is missing. Run training before prediction."
+        ),
     }

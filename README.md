@@ -34,7 +34,7 @@ MLOps-проект для предсказания стоимости брилл
 
 Датасет: [Kaggle Diamonds Dataset](https://www.kaggle.com/datasets/shivam2503/diamonds)
 
-Презентация - https://drive.google.com/file/d/1yhTzTyjb7gmj4y4bQLWzS0v7sFHl4q5n/view?usp=sharing 
+Презентация - https://drive.google.com/file/d/1yhTzTyjb7gmj4y4bQLWzS0v7sFHl4q5n/view?usp=sharing
 
 ## Почему выбран Diamonds Dataset
 
@@ -118,7 +118,7 @@ flowchart LR
 |   |-- Dockerfile
 |   `-- prometheus.yml
 |-- .github/workflows/
-|   `-- ci-cd.yml
+|   `-- ci.yml
 |-- models/
 |-- reports/
 |   |-- figures/
@@ -127,30 +127,33 @@ flowchart LR
 |   `-- presentation.md
 |-- run_pipeline.py
 |-- docker-compose.yml
-|-- requirements.txt
+|-- pyproject.toml
+|-- uv.lock
+|-- .pre-commit-config.yaml
 `-- README.md
 ```
 
 ## Быстрый старт
 
-Создать и активировать виртуальное окружение на Windows:
+В проекте используется [uv](https://docs.astral.sh/uv/) для управления зависимостями и виртуальным окружением. Установите `uv` по официальной инструкции, затем из корня репозитория выполните:
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+uv sync
 ```
 
-Установить зависимости:
+Команда создаст `.venv` и установит runtime-зависимости, инструменты разработки и тестирования по зафиксированному `uv.lock`. Только runtime-зависимости можно установить так:
 
 ```bash
-pip install -r requirements.txt
+uv sync --no-dev
 ```
 
 Запустить полный ML pipeline:
 
 ```bash
-python run_pipeline.py
+uv run python run_pipeline.py
 ```
+
+`uv run` автоматически использует окружение проекта; активировать `.venv` вручную не нужно.
 
 Ожидаемый вывод:
 
@@ -177,7 +180,7 @@ data/raw/diamonds.csv
 ## Запуск ETL
 
 ```bash
-python -m src.data_processing
+uv run python -m src.data_processing
 ```
 
 Ожидаемый вывод:
@@ -226,7 +229,7 @@ Saved processed train/test data: train=400, test=100
 ## Обучение модели
 
 ```bash
-python -m src.model_training
+uv run python -m src.model_training
 ```
 
 Ожидаемый вывод - JSON с реальными метриками:
@@ -251,7 +254,7 @@ python -m src.model_training
 Графики для отчета находятся в `reports/figures/`. Их можно пересоздать командой:
 
 ```bash
-python -m src.visualization
+uv run python -m src.visualization
 ```
 
 ![Распределение цены бриллиантов](reports/figures/price_distribution.png)
@@ -314,32 +317,44 @@ Endpoint-ы:
 
 Если модель еще не обучена, `/predict` вернет HTTP 503 с подсказкой запустить обучение. При этом импорт FastAPI-приложения не падает без файла модели.
 
-## Тестирование
+## Тесты и качество кода
 
 Запуск всех тестов:
 
 ```bash
-pytest -v
+uv run python -m pytest -v --cov=src --cov-report=term-missing
 ```
 
-Текущий ожидаемый результат:
+Линтеры и форматирование можно проверить командами:
 
 ```text
-18 passed
+uv run ruff check .
+uv run black --check .
+uv run isort --check-only .
 ```
 
-Опциональная команда для coverage, если установлен `pytest-cov`:
+Для автоматического исправления стиля:
 
 ```bash
-pytest --cov=src --cov-report=term-missing
+uv run ruff check . --fix
+uv run isort .
+uv run black .
 ```
+
+Установите Git hooks один раз:
+
+```bash
+uv run pre-commit install
+```
+
+Перед каждым commit будут проверяться базовые файлы, Ruff, isort и Black. Все hooks можно запустить вручную: `uv run pre-commit run --all-files`.
 
 ## Monitoring
 
 Проверка infrastructure metrics:
 
 ```bash
-python -m src.infrastructure_monitoring
+uv run python -m src.infrastructure_monitoring
 ```
 
 Пример вывода:
@@ -377,21 +392,13 @@ docker compose up
 
 ## CI/CD
 
-GitHub Actions workflow находится здесь:
+GitHub Actions workflow находится в `.github/workflows/ci.yml`. Он запускается для Pull Request в `main`, push в `main` и вручную. В workflow есть три jobs:
 
-```text
-.github/workflows/ci-cd.yml
-```
+- `Run linters`: pre-commit, Ruff, Black и isort;
+- `Tests`: pytest с coverage;
+- `Docker build`: запускается после успешных линтеров и тестов.
 
-Workflow выполняет:
-
-1. checkout репозитория;
-2. настройку Python;
-3. pip dependency cache;
-4. установку зависимостей;
-5. compile check для `src` и `tests`;
-6. `python -m pytest -v`;
-7. Docker image build.
+CI использует `uv sync --locked`, проверяя соответствие `pyproject.toml` и `uv.lock` без автоматического обновления версий.
 
 Deploy, cloud integrations и secrets не добавлены специально: для проекта выбран простой и стабильный workflow без внешней инфраструктуры.
 
@@ -412,10 +419,10 @@ git push origin main
 
 ### `ModuleNotFoundError`
 
-Установить зависимости в активном окружении:
+Синхронизировать окружение проекта:
 
 ```bash
-pip install -r requirements.txt
+uv sync
 ```
 
 ### `/predict` возвращает HTTP 503
@@ -423,7 +430,7 @@ pip install -r requirements.txt
 Сначала обучить модель:
 
 ```bash
-python -m src.model_training
+uv run python -m src.model_training
 ```
 
 ### Нет Kaggle dataset
@@ -449,7 +456,7 @@ docker compose build
 
 ## Возможные будущие улучшения
 
-- Добавить `pytest-cov` и публиковать coverage в CI.
+- Повысить coverage для ETL и генерации отчетных графиков.
 - Добавить сравнение нескольких моделей.
 - Сделать простой monitoring dashboard или экспорт monitoring report.
 - Добавить скриншоты в финальную документацию после ручной проверки.

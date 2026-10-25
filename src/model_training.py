@@ -25,7 +25,6 @@ from src.data_processing import (
 )
 from src.monitoring import save_baseline
 
-
 MODEL_DIR = PROJECT_ROOT / "models"
 MODEL_PATH = MODEL_DIR / "diamond_price_model.joblib"
 METRICS_PATH = MODEL_DIR / "metrics.json"
@@ -64,7 +63,9 @@ def build_model(random_state: int = 42) -> Pipeline:
     return Pipeline(steps=[("preprocessor", preprocessor), ("model", regressor)])
 
 
-def calculate_metrics(y_true: pd.Series | np.ndarray, y_pred: np.ndarray) -> dict[str, float]:
+def calculate_metrics(
+    y_true: pd.Series | np.ndarray, y_pred: np.ndarray
+) -> dict[str, float]:
     """Рассчитать regression metrics по реальным предсказаниям."""
     rmse = float(np.sqrt(mean_squared_error(y_true, y_pred)))
     mae = float(mean_absolute_error(y_true, y_pred))
@@ -74,7 +75,9 @@ def calculate_metrics(y_true: pd.Series | np.ndarray, y_pred: np.ndarray) -> dic
     return {"rmse": rmse, "mae": mae, "r2": r2, "mape": mape}
 
 
-def load_processed_data(processed_dir: Path | str = PROCESSED_DIR) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_processed_data(
+    processed_dir: Path | str = PROCESSED_DIR,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Загрузить processed train/test data, создав их при необходимости."""
     processed_dir = Path(processed_dir)
     train_path = processed_dir / "train.csv"
